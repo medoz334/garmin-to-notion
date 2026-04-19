@@ -259,6 +259,7 @@ def main():
     # ----------------------------------------------------------------------
 
     client = Client(auth=notion_token)
+
     records = garmin.get_personal_record()
     filtered_records = [record for record in records if record.get('typeId') != 16]
 
@@ -301,7 +302,7 @@ def main():
                 write_new_record(client, database_id, activity_date, activity_type, activity_name, typeId, value, pace)
         else:
             write_new_record(client, database_id, activity_date, activity_type, activity_name, typeId, value, pace)
-            print(f"Successfully written new record: {activity_type} - {activity_name}")
+            print(f"Created new record: {activity_type} - {activity_name}")
 
 if __name__ == '__main__':
     main()
