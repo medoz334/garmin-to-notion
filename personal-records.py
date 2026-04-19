@@ -240,23 +240,23 @@ def main():
     notion_token = os.getenv("NOTION_TOKEN")
     database_id = os.getenv("NOTION_PR_DB_ID")
 
-# --- Garmin login with token cache (to avoid 429 Too Many Requests) ---
-token_dir = os.path.expanduser(os.getenv("GARMIN_TOKEN_DIR", "~/.garth"))
-garmin = Garmin(garmin_email, garmin_password)
-try:
-    # Reuse saved tokens if available (no SSO hit)
-    garmin.login(token_dir)
-    print(f"Logged in with cached tokens from {token_dir}")
-except Exception as e:
-    # Fall back to a fresh SSO login, then persist tokens for next runs
-    print(f"Cached login failed ({e.__class__.__name__}): {e}. Doing fresh login...")
-    garmin.login()
+    # --- Garmin login with token cache (to avoid 429 Too Many Requests) ---
+    token_dir = os.path.expanduser(os.getenv("GARMIN_TOKEN_DIR", "~/.garth"))
+    garmin = Garmin(garmin_email, garmin_password)
     try:
-        garmin.garth.dump(token_dir)
-        print(f"Saved new tokens to {token_dir}")
-    except Exception as dump_err:
-        print(f"Warning: could not save tokens: {dump_err}")
-# ----------------------------------------------------------------------
+        # Reuse saved tokens if available (no SSO hit)
+        garmin.login(token_dir)
+        print(f"Logged in with cached tokens from {token_dir}")
+    except Exception as e:
+        # Fall back to a fresh SSO login, then persist tokens for next runs
+        print(f"Cached login failed ({e.__class__.__name__}): {e}. Doing fresh login...")
+        garmin.login()
+        try:
+            garmin.garth.dump(token_dir)
+            print(f"Saved new tokens to {token_dir}")
+        except Exception as dump_err:
+            print(f"Warning: could not save tokens: {dump_err}")
+    # ----------------------------------------------------------------------
 
     client = Client(auth=notion_token)
     records = garmin.get_personal_record()
