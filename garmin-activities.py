@@ -296,9 +296,24 @@ def main():
     database_id = os.getenv("NOTION_DB_ID")
     garmin_fetch_limit = int(os.getenv("GARMIN_ACTIVITIES_FETCH_LIMIT") or "1000")
 
-    # Initialize Garmin client and login
+    # --- Garmin login with token cache (to avoid 429 Too Many Requests) ---
+    token_dir = os.path.expanduser(os.getenv("GARMIN_TOKEN_DIR", "~/.garth"))
     garmin_client = GarminClient(garmin_email, garmin_password)
-    garmin_client.login()
+    try:
+        # Reuse saved tokens if available (no SSO hit)
+        garmin_client.login(token_dir)
+        print(f"Logged in with cached tokens from {token_dir}")
+    except Exception as e:
+        # Fall back to a fresh SSO login, then persist tokens for next runs
+        print(f"Cached login failed ({e.__class__.__name__}): {e}. Doing fresh login...")
+        garmin_client.login()
+        try:
+            garmin_client.garth.dump(token_dir)
+            print(f"Saved new tokens to {token_dir}")
+        except Exception as dump_err:
+            print(f"Warning: could not save tokens: {dump_err}")
+    # ----------------------------------------------------------------------
+
     notion_client = NotionClient(auth=notion_token)
 
     # Get all activities
@@ -309,8 +324,8 @@ def main():
         activity_date_raw: str = activity.get('startTimeGMT')
         activity_date: datetime = (
             datetime
-            .strptime(activity_date_raw, '%Y-%m-%d %H:%M:%S')  # Parse as format received from Garmin
-            .replace(tzinfo=UTC)  # Set timezone to UTC, as Garmin times are in GMT/UTC. Close enough.
+            .strptime(activity_date_raw, '%Y-%m-%d %H:%M:%S')
+            .replace(tzinfo=UTC)
         )
 
         activity_name = format_entertainment(activity.get('activityName', 'Unnamed Activity'))
@@ -319,17 +334,13 @@ def main():
             activity_name
         )
 
-        # Check if activity already exists in Notion
         existing_activity = activity_exists(notion_client, database_id, activity_date, activity_type, activity_name)
 
         if existing_activity:
             if activity_needs_update(existing_activity, activity):
                 update_activity(notion_client, existing_activity, activity)
-                # print(f"Would update: {activity_type} - {activity_name} - {activity_date}")
         else:
             create_activity(notion_client, database_id, activity)
-            # print(f"Would create: {activity_type} - {activity_name} - {activity_date}")
-
 
 if __name__ == '__main__':
     main()
