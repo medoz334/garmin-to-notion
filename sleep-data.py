@@ -1,92 +1,92 @@
-から 日付時刻 輸入 日付時刻
-から ガーミンコネクト 輸入 ガーミン
-から notion_クライアント 輸入 クライアント
-から ドテンヴ 輸入 load_dotenv、dotenv_values
-輸入 ピッツ
+かえ 日付時刻 輸入 日付時刻
+た・た・た・た・た・た
+かわいい道心_かわん
+ # 💰大小 たんちょう
+・・・・・。たんんんんん
 輸入 OS
 
 # 定数
-local_tz = pytz。タイムゾーン(「アメリカ/New_York」)
+local_tz = ・・・・・。ガーミンガーミン garmin_password = os。サロンガンガンガン(「GARMIN_PASSWORD」ちょう）「ニューヨーク/New_York」)
 
-# 環境変数をロードする
-ロード_ドーテン()
-設定 = ドテンブ_値()
+# 💰大大小
+・・・・・()
+設定 = サロン_個()
 
-def get_sleep_data(ガーミン):
+def get_sleep_data(カロン):
  今日 = 日付時刻。今日().日付()
-    戻る ガーミン。get_sleep_data(今日。アイソフォーマット())
+ 我々 カツカ。get_sleep_data(今日。むかむかむ())
 
-def フォーマット_期間(秒):
- 分 = (秒 または 0) // 60
-    戻る f"{分 // 60}h {分 % 60}m"
+def ・・・・・_月間(秒):
+ 分 = (秒 たたは 0) // 60
+ 我々 f"{分 // 60}h {分 % 60}m"
 
-def フォーマット_時間(タイムスタンプ):
-    戻る (
- 日時。utcfromtimestamp(タイムスタンプ / 1000).ストルタイム(「%Y-%m-%dT%H:%M:%S。000Z」)
-        もし タイムスタンプ それ以外 なし
+def ・・・・・_時間(サササ):
+    我々 (
+ 日時。utcfromtimestamp(サササ / 1000).ぶるぶるぶる(「%Y-%m-%dT%H:%M:%S。000Z」)
+ たしかたししししし
     )
 
-def フォーマット_時間_読み取り可能(タイムスタンプ):
-    戻る (
- 日時。タイムスタンプから(タイムスタンプ / 1000, 、 local_tz).ストルタイム(「%H:%M」)
-        もし タイムスタンプ それ以外 「不明」
+def ・・・・・エ_時間_読ゆく(サササ):
+    我々 (
+ 日時。そりゃくしょしゃくしょしゃ(サササ / 1000, 、 、 local_tz).ぶるぶるぶる(「%H:%M」)
+ サササ むしつく 「不明」
     )
 
-def format_date_for_name(スリープ_日付):
-    戻る 日時。ストルタイム(sleep_date、 「%Y-%m-%d」).ストルタイム(「%d.%m。%Y") もし スリープ_日付 それ以外 「不明」
+def format_date_for_name(よリープ_日付):
+ 我々 日時。ぶるぶるぶる(sleep_date、 「%Y-%m-%d」).ぶるぶるぶる(「%d.%m。%Y") むしリープ_日付 むし以外 「不明」
 
-def sleep_data_exists(クライアント、database_id、sleep_date):
- クエリ = クライアント。データベース.クエリ(
+def sleep_data_exists(サデータベース、database_id、sleep_date):
+ ササ = むォ〜〜。・・・・・。ねエリ(
  database_id=database_id、
- フィルター={「プロパティ」: 「ロングデート」, 「日付」: {「等しい」: sleep_date}}
+ ・キャーキャー={「ひょろうん」: 「ひょろうん」, 「ひょろうん」: {「寝」: sleep_date}}
     )
- 結果 = クエリ。得る(「結果」, [])
-    戻る 結果[0] もし 結果 それ以外 なし  # IndexError を引き起こす代わりに None を返すようにします
+ 結果 = クエリ。得る(「結月」、 [])
+ 戻々 結果[0] たし たし # そりそり
 
-def create_sleep_data(クライアント、database_id、sleep_data、skip_zero_sleep=真実):
- daily_sleep = sleep_data。得る(‘dailysleepdto’, {})
-    もし ない daily_sleep:
-        戻る
+def create_sleep_data(サワサワサワ、サワサワサワ_id、サワサワサワ_サワサワサワ、サワサワ_サワサワ_サワサワ=サワサワ):
+ daily_sleep = sleep_data。得る(‘dailysleepdto’、 {})
+ たしだ daily_sleep:
+ 我々
     
- sleep_date = daily_sleep。得る(「カレンダー日付」, 「日付不明」)
+ sleep_date = daily_sleep。得る(「日付不明」, 「日付不明」)
  total_sleep = 合計(
-        (daily_sleep。得る(k、 0) または 0) のために k で [「ディープスリープ秒」, ‘lightSleepSeconds’, ‘remSleepSeconds’]
+        (daily_sleep。得る(k、0) まやは 0) たせにく k ち [「remsleepSeconds」、‘lightSleepSeconds’、‘remsleepSeconds’]
     )
     
     
-    もし スキップ_ゼロ_スリープ そして total_sleep == 0:
-        印刷(f"睡眠データをスキップします {スリープ_日付} 総睡眠時間は0インチなので)
-        戻る
+ _エサ_エサ_エサ == 0:
+        印刷(f"睡看過ちょうん {よリープ_日付} 総睡看著間は0やんちょうが）
+ 我々
 
- プロパティ = {
-        「日付」: {「タイトル」: [{「テキスト」: {「コンテンツ」: format_date_for_name(スリープ_日付)}}]},
-        「タイムズ」: {「リッチ_テキスト」: [{「テキスト」: {「コンテンツ」: f"{フォーマット_時間_読み取り可能(daily_sleep。得る(「スリープスタートタイムスタンプGMT」))} → {フォーマット_時間_読み取り可能(daily_sleep。get('sleepEndTimestampGMT'))}"}}]},
-        「ロングデート」: {「日付」: {「スタート」: sleep_date}},
-        「完全な日付/時刻」: {「日付」: {「スタート」: フォーマット_時間(daily_sleep。得る(「スリープスタートタイムスタンプGMT」)), 「終わり」: フォーマット_時間(daily_sleep。得る(‘sleepEndTimestampGMT’))}},
-        「トータルスリープ（h）」: {「番号」: ラウンド(total_sleep / 3600, 1)},
-        「軽い睡眠（h）」: {「番号」: ラウンド(daily_sleep。得る(‘lightSleepSeconds’, 0) / 3600, 1)},
-        「深い眠り（h）」: {「番号」: ラウンド(daily_sleep。得る(「ディープスリープ秒」, 0) / 3600, 1)},
-        「レム睡眠（h）」: {「番号」: ラウンド(daily_sleep。得る(‘remSleepSeconds’, 0) / 3600, 1)},
-        「起床時間（h）」: {「番号」: ラウンド(daily_sleep。得る(「覚醒時の睡眠秒数」, 0) / 3600, 1)},
-        「トータルスリープ」: {「リッチ_テキスト」: [{「テキスト」: {「コンテンツ」: フォーマット_期間(total_sleep)}}]},
-        「軽い睡眠」: {「リッチ_テキスト」: [{「テキスト」: {「コンテンツ」: フォーマット_期間(daily_sleep。得る(‘lightSleepSeconds’, 0))}}]},
-        「深い眠り」: {「リッチ_テキスト」: [{「テキスト」: {「コンテンツ」: フォーマット_期間(daily_sleep。得る(「ディープスリープ秒」, 0))}}]},
-        「レム睡眠」: {「リッチ_テキスト」: [{「テキスト」: {「コンテンツ」: フォーマット_期間(daily_sleep。得る(‘remSleepSeconds’, 0))}}]},
-        「目覚めの時間」: {「リッチ_テキスト」: [{「テキスト」: {「コンテンツ」: フォーマット_期間(daily_sleep。得る(「覚醒時の睡眠秒数」, 0))}}]},
-        「安静時の心拍数」: {「番号」: sleep_data。得る(「ハートレートを休ませる」, 0)}
+ ・・・・・ = {
+ 「日付」: {「むしむ」: [{「ゆううううう」: {「ココちゃん」: format_date_for_name（デュー_date_for_name）デュー_date_for_name}}]},
+ 「むつむつ」: {「む_む」: [{「ゆううううう」: {「ココちゃん」: f"{・・・・・エ_時間_読ゆく(daily_sleep。得る(「ガンガンガンガンGMT」))} → {・・・・・_時間_読ゆく(daily_sleep。get('sleepEndTimestampGMT'))}"}}]},
+ 「たんんんん」: {「日付」: {「むむむ」: ・・・・・_日他}},
+ 「完全日日付/時分」: {「日付」: {「むむむ」: ・ォーマト_時間（daily_sleep。得る(「GMT」)), 「終珊」: 日・日・日_日間（daily_sleep。看看(‘sleepEndTimestampGMT’))}},
+ 「たんちょうちゃん、たんちょうちゃん、たんちょうちゃん、たんちょうちゃん {「番号」: トータルスリープ（total_sleep / 3600, 1)},
+ 「軽い睡看（h）」: {「番号」: ・・・・・（daily_sleep。得(‘lightSleepSeconds’, 0) / 3600, 1)},
+ 「深い看（h）」: {「番号」: ・・・・・（daily_sleep。得う「�デープ」ープ秒, 0) / 3600, 1)},
+ 「ハァァァ（h）」: {「番号」: ・・・・・（daily_sleep。得る(‘remSleepSeconds’, 0) / 3600, 1)},
+ 「起床時道（h）」: {「番号」: ・・・・・（daily_sleep。得る (「覚醒時の睡看看」, 0) / 3600, 1)},
+ 「よえ〜〜〜」: {「む_む」: [{「ゆううううう」: {「ココちゃん」: トータル_寝（total_sleep）}}]},
+ 「軽い睡看」: {「む_む」: [{「ゆううううう」: {「ココちゃん」: ・・・・・_日間（daily_sleep。得(‘lightSleepSeconds’, 0))}}]},
+ 「深い看」: {「む_む」: [{「ゆううううう」: {「ココちゃん」: ・・・・・_日間（daily_sleep。得る(「デャープスリープ秒」, 0))}}]},
+ 「たんちょうちょう」: {「む_む」: [{「ゆううううう」: {「ココちゃん」: ・・・・・_日間（daily_sleep。得る(‘remSleepSeconds’, 0))}}]},
+ 「目覚いんんんんん」: {「む_む」: [{「ゆううううう」: {「ココちゃん」: ・・・・・_日間（daily_sleep。得(「覚醒時の的的的的的数」, 0))}}]},
+ 「安静時の心情」: {「番号」: sleep_data。得 (「えい〜えい〜」, 0)}
     }
     
- クライアント。ページ.作成する(親={「データベース_id」: database_id}, 、 プロパティ=プロパティ、アイコン={「絵文字」: 「😴」})
-    印刷(f"次のスリープエントリを作成しました: {スリープ_日付}")
+ むつむつむつ。・ペジ。作我に（親={「むぅイ_id」: ・キャーキャー_id}, 、 、 、 、 、 ペンちゃん=ペンちゃん={「粉文子」: 「😴」})
+ 印刷（f"早読みのちょうちゃん: {早読みのちょうちゃん_早読みのちょうちゃん}")
 
-def メイン():
-    ロード_ドーテン()
+def サツ():
+ ・_・・・・・()
 
-    # 環境変数を使用して Garmin クライアントと Notion クライアントを初期化します
- garmin_email = os。ゲテンヴ(「GARMIN_EMAIL」)
- garmin_password = os。ゲテンヴ(「GARMIN_PASSWORD」です)
- notion_token = os。ゲテンヴ(「NOTION_TOKEN」)
- database_id = os。ゲテンヴ(「NOTION_SLEEP_DB_ID」)
+ # 💰大小 たんちょう
+ garmin_email = os。ガーミン(「GARMIN_EMAIL」)
+ garmin_password = os。ガーミン(「GARMIN_PASSWORD」ちょう）
+ notion_token = os。ノーショントークン(「NOTION_TOKEN」)
+ database_id = os。ノーション(「NOTION_SLEEP_DB_ID」)
 
     # --- トークン キャッシュを使用した Garmin ログイン (429 件のリクエストが多すぎないようにするため）---
  token_dir = os。パス.エクスパンダ(オス。ゲテンヴ(「ガーミン_トークン_ディレクトリ」, 「~/.garth」))
