@@ -1,101 +1,101 @@
-かえ 日付時刻 輸入 日付時刻
-た・た・た・た・た・た
-かわいい道心_かわん
- # 💰大小 たんちょう
-・・・・・。たんんんんん
-輸入 OS
+from datetime import datetime
+from garminconnect import Garmin
+from notion_client import Client
+from dotenv import load_dotenv, dotenv_values
+import pytz
+import os
 
-# 定数
-local_tz = ・・・・・。ガーミンガーミン garmin_password = os。サロンガンガンガン(「GARMIN_PASSWORD」ちょう）「ニューヨーク/New_York」)
+# Constants
+local_tz = pytz.timezone("America/New_York")
 
-# 💰大大小
-・・・・・()
-設定 = サロン_個()
+# Load environment variables
+load_dotenv()
+CONFIG = dotenv_values()
 
-def get_sleep_data(カロン):
- 今日 = 日付時刻。今日().日付()
- 我々 カツカ。get_sleep_data(今日。むかむかむ())
+def get_sleep_data(garmin):
+    today = datetime.today().date()
+    return garmin.get_sleep_data(today.isoformat())
 
-def ・・・・・_月間(秒):
- 分 = (秒 たたは 0) // 60
- 我々 f"{分 // 60}h {分 % 60}m"
+def format_duration(seconds):
+    minutes = (seconds or 0) // 60
+    return f"{minutes // 60}h {minutes % 60}m"
 
-def ・・・・・_時間(サササ):
-    我々 (
- 日時。utcfromtimestamp(サササ / 1000).ぶるぶるぶる(「%Y-%m-%dT%H:%M:%S。000Z」)
- たしかたししししし
+def format_time(timestamp):
+    return (
+        datetime.utcfromtimestamp(timestamp / 1000).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+        if timestamp else None
     )
 
-def ・・・・・エ_時間_読ゆく(サササ):
-    我々 (
- 日時。そりゃくしょしゃくしょしゃ(サササ / 1000, 、 、 local_tz).ぶるぶるぶる(「%H:%M」)
- サササ むしつく 「不明」
+def format_time_readable(timestamp):
+    return (
+        datetime.fromtimestamp(timestamp / 1000, local_tz).strftime("%H:%M")
+        if timestamp else "Unknown"
     )
 
-def format_date_for_name(よリープ_日付):
- 我々 日時。ぶるぶるぶる(sleep_date、 「%Y-%m-%d」).ぶるぶるぶる(「%d.%m。%Y") むしリープ_日付 むし以外 「不明」
+def format_date_for_name(sleep_date):
+    return datetime.strptime(sleep_date, "%Y-%m-%d").strftime("%d.%m.%Y") if sleep_date else "Unknown"
 
-def sleep_data_exists(サデータベース、database_id、sleep_date):
- ササ = むォ〜〜。・・・・・。ねエリ(
- database_id=database_id、
- ・キャーキャー={「ひょろうん」: 「ひょろうん」, 「ひょろうん」: {「寝」: sleep_date}}
+def sleep_data_exists(client, database_id, sleep_date):
+    query = client.databases.query(
+        database_id=database_id,
+        filter={"property": "Long Date", "date": {"equals": sleep_date}}
     )
- 結果 = クエリ。得る(「結月」、 [])
- 戻々 結果[0] たし たし # そりそり
+    results = query.get('results', [])
+    return results[0] if results else None  # Ensure it returns None instead of causing IndexError
 
-def create_sleep_data(サワサワサワ、サワサワサワ_id、サワサワサワ_サワサワサワ、サワサワ_サワサワ_サワサワ=サワサワ):
- daily_sleep = sleep_data。得る(‘dailysleepdto’、 {})
- たしだ daily_sleep:
- 我々
+def create_sleep_data(client, database_id, sleep_data, skip_zero_sleep=True):
+    daily_sleep = sleep_data.get('dailySleepDTO', {})
+    if not daily_sleep:
+        return
     
- sleep_date = daily_sleep。得る(「日付不明」, 「日付不明」)
- total_sleep = 合計(
-        (daily_sleep。得る(k、0) まやは 0) たせにく k ち [「remsleepSeconds」、‘lightSleepSeconds’、‘remsleepSeconds’]
+    sleep_date = daily_sleep.get('calendarDate', "Unknown Date")
+    total_sleep = sum(
+        (daily_sleep.get(k, 0) or 0) for k in ['deepSleepSeconds', 'lightSleepSeconds', 'remSleepSeconds']
     )
     
     
- _エサ_エサ_エサ == 0:
-        印刷(f"睡看過ちょうん {よリープ_日付} 総睡看著間は0やんちょうが）
- 我々
+    if skip_zero_sleep and total_sleep == 0:
+        print(f"Skipping sleep data for {sleep_date} as total sleep is 0")
+        return
 
- ・・・・・ = {
- 「日付」: {「むしむ」: [{「ゆううううう」: {「ココちゃん」: format_date_for_name（デュー_date_for_name）デュー_date_for_name}}]},
- 「むつむつ」: {「む_む」: [{「ゆううううう」: {「ココちゃん」: f"{・・・・・エ_時間_読ゆく(daily_sleep。得る(「ガンガンガンガンGMT」))} → {・・・・・_時間_読ゆく(daily_sleep。get('sleepEndTimestampGMT'))}"}}]},
- 「たんんんん」: {「日付」: {「むむむ」: ・・・・・_日他}},
- 「完全日日付/時分」: {「日付」: {「むむむ」: ・ォーマト_時間（daily_sleep。得る(「GMT」)), 「終珊」: 日・日・日_日間（daily_sleep。看看(‘sleepEndTimestampGMT’))}},
- 「たんちょうちゃん、たんちょうちゃん、たんちょうちゃん、たんちょうちゃん {「番号」: トータルスリープ（total_sleep / 3600, 1)},
- 「軽い睡看（h）」: {「番号」: ・・・・・（daily_sleep。得(‘lightSleepSeconds’, 0) / 3600, 1)},
- 「深い看（h）」: {「番号」: ・・・・・（daily_sleep。得う「�デープ」ープ秒, 0) / 3600, 1)},
- 「ハァァァ（h）」: {「番号」: ・・・・・（daily_sleep。得る(‘remSleepSeconds’, 0) / 3600, 1)},
- 「起床時道（h）」: {「番号」: ・・・・・（daily_sleep。得る (「覚醒時の睡看看」, 0) / 3600, 1)},
- 「よえ〜〜〜」: {「む_む」: [{「ゆううううう」: {「ココちゃん」: トータル_寝（total_sleep）}}]},
- 「軽い睡看」: {「む_む」: [{「ゆううううう」: {「ココちゃん」: ・・・・・_日間（daily_sleep。得(‘lightSleepSeconds’, 0))}}]},
- 「深い看」: {「む_む」: [{「ゆううううう」: {「ココちゃん」: ・・・・・_日間（daily_sleep。得る(「デャープスリープ秒」, 0))}}]},
- 「たんちょうちょう」: {「む_む」: [{「ゆううううう」: {「ココちゃん」: ・・・・・_日間（daily_sleep。得る(‘remSleepSeconds’, 0))}}]},
- 「目覚いんんんんん」: {「む_む」: [{「ゆううううう」: {「ココちゃん」: ・・・・・_日間（daily_sleep。得(「覚醒時の的的的的的数」, 0))}}]},
- 「安静時の心情」: {「番号」: sleep_data。得 (「えい〜えい〜」, 0)}
+    properties = {
+        "Date": {"title": [{"text": {"content": format_date_for_name(sleep_date)}}]},
+        "Times": {"rich_text": [{"text": {"content": f"{format_time_readable(daily_sleep.get('sleepStartTimestampGMT'))} → {format_time_readable(daily_sleep.get('sleepEndTimestampGMT'))}"}}]},
+        "Long Date": {"date": {"start": sleep_date}},
+        "Full Date/Time": {"date": {"start": format_time(daily_sleep.get('sleepStartTimestampGMT')), "end": format_time(daily_sleep.get('sleepEndTimestampGMT'))}},
+        "Total Sleep (h)": {"number": round(total_sleep / 3600, 1)},
+        "Light Sleep (h)": {"number": round(daily_sleep.get('lightSleepSeconds', 0) / 3600, 1)},
+        "Deep Sleep (h)": {"number": round(daily_sleep.get('deepSleepSeconds', 0) / 3600, 1)},
+        "REM Sleep (h)": {"number": round(daily_sleep.get('remSleepSeconds', 0) / 3600, 1)},
+        "Awake Time (h)": {"number": round(daily_sleep.get('awakeSleepSeconds', 0) / 3600, 1)},
+        "Total Sleep": {"rich_text": [{"text": {"content": format_duration(total_sleep)}}]},
+        "Light Sleep": {"rich_text": [{"text": {"content": format_duration(daily_sleep.get('lightSleepSeconds', 0))}}]},
+        "Deep Sleep": {"rich_text": [{"text": {"content": format_duration(daily_sleep.get('deepSleepSeconds', 0))}}]},
+        "REM Sleep": {"rich_text": [{"text": {"content": format_duration(daily_sleep.get('remSleepSeconds', 0))}}]},
+        "Awake Time": {"rich_text": [{"text": {"content": format_duration(daily_sleep.get('awakeSleepSeconds', 0))}}]},
+        "Resting HR": {"number": sleep_data.get('restingHeartRate', 0)}
     }
     
- むつむつむつ。・ペジ。作我に（親={「むぅイ_id」: ・キャーキャー_id}, 、 、 、 、 、 ペンちゃん=ペンちゃん={「粉文子」: 「😴」})
- 印刷（f"早読みのちょうちゃん: {早読みのちょうちゃん_早読みのちょうちゃん}")
+    client.pages.create(parent={"database_id": database_id}, properties=properties, icon={"emoji": "😴"})
+    print(f"Created sleep entry for: {sleep_date}")
 
-def サツ():
- ・_・・・・・()
+def main():
+    load_dotenv()
 
- # 💰大小 たんちょう
- garmin_email = os。ガーミン(「GARMIN_EMAIL」)
- garmin_password = os。ガーミン(「GARMIN_PASSWORD」ちょう）
- notion_token = os。ノーショントークン(「NOTION_TOKEN」)
- database_id = os。ノーション(「NOTION_SLEEP_DB_ID」)
+    # Initialize Garmin and Notion clients using environment variables
+    garmin_email = os.getenv("GARMIN_EMAIL")
+    garmin_password = os.getenv("GARMIN_PASSWORD")
+    notion_token = os.getenv("NOTION_TOKEN")
+    database_id = os.getenv("NOTION_SLEEP_DB_ID")
 
-    # --- トークン キャッシュを使用した Garmin ログイン (429 件のリクエストが多すぎないようにするため）---
- token_dir = os。パス.エクスパンダ(オス。ゲテンヴ(「ガーミン_トークン_ディレクトリ」, 「~/.garth」))
- ガーミン = ガーミン(garmin_email、garmin_パスワード)
-    試す:
-        # 保存したトークンが利用可能な場合は再利用します（SSO ヒットなし）
- ガーミン。ログイン(トークン_ディレクトリ)
-        印刷(f"キャッシュされたトークンでログインしました {トークン_ディレクトリ}")
-    以外 例外 として e:
+    # --- Garmin login with token cache (to avoid 429 Too Many Requests) ---
+    token_dir = os.path.expanduser(os.getenv("GARMIN_TOKEN_DIR", "~/.garth"))
+    garmin = Garmin(garmin_email, garmin_password)
+    try:
+        # Reuse saved tokens if available (no SSO hit)
+        garmin.login(token_dir)
+        print(f"Logged in with cached tokens from {token_dir}")
+    except Exception as e:
         # Fall back to a fresh SSO login, then persist tokens for next runs
         print(f"Cached login failed ({e.__class__.__name__}): {e}. Doing fresh login...")
         garmin.login()
