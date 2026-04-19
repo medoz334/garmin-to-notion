@@ -1,101 +1,101 @@
-from datetime import datetime
-from garminconnect import Garmin
-from notion_client import Client
-from dotenv import load_dotenv, dotenv_values
-import pytz
-import os
+から 日付時刻 輸入 日付時刻
+から ガーミンコネクト 輸入 ガーミン
+から notion_クライアント 輸入 クライアント
+から ドテンヴ 輸入 load_dotenv、dotenv_values
+輸入 ピッツ
+輸入 OS
 
-# Constants
-local_tz = pytz.timezone("America/New_York")
+# 定数
+local_tz = pytz。タイムゾーン(「アメリカ/New_York」)
 
-# Load environment variables
-load_dotenv()
-CONFIG = dotenv_values()
+# 環境変数をロードする
+ロード_ドーテン()
+設定 = ドテンブ_値()
 
-def get_sleep_data(garmin):
-    today = datetime.today().date()
-    return garmin.get_sleep_data(today.isoformat())
+def get_sleep_data(ガーミン):
+ 今日 = 日付時刻。今日().日付()
+    戻る ガーミン。get_sleep_data(今日。アイソフォーマット())
 
-def format_duration(seconds):
-    minutes = (seconds or 0) // 60
-    return f"{minutes // 60}h {minutes % 60}m"
+def フォーマット_期間(秒):
+ 分 = (秒 または 0) // 60
+    戻る f"{分 // 60}h {分 % 60}m"
 
-def format_time(timestamp):
-    return (
-        datetime.utcfromtimestamp(timestamp / 1000).strftime("%Y-%m-%dT%H:%M:%S.000Z")
-        if timestamp else None
+def フォーマット_時間(タイムスタンプ):
+    戻る (
+ 日時。utcfromtimestamp(タイムスタンプ / 1000).ストルタイム(「%Y-%m-%dT%H:%M:%S。000Z」)
+        もし タイムスタンプ それ以外 なし
     )
 
-def format_time_readable(timestamp):
-    return (
-        datetime.fromtimestamp(timestamp / 1000, local_tz).strftime("%H:%M")
-        if timestamp else "Unknown"
+def フォーマット_時間_読み取り可能(タイムスタンプ):
+    戻る (
+ 日時。タイムスタンプから(タイムスタンプ / 1000, 、 local_tz).ストルタイム(「%H:%M」)
+        もし タイムスタンプ それ以外 「不明」
     )
 
-def format_date_for_name(sleep_date):
-    return datetime.strptime(sleep_date, "%Y-%m-%d").strftime("%d.%m.%Y") if sleep_date else "Unknown"
+def format_date_for_name(スリープ_日付):
+    戻る 日時。ストルタイム(sleep_date、 「%Y-%m-%d」).ストルタイム(「%d.%m。%Y") もし スリープ_日付 それ以外 「不明」
 
-def sleep_data_exists(client, database_id, sleep_date):
-    query = client.databases.query(
-        database_id=database_id,
-        filter={"property": "Long Date", "date": {"equals": sleep_date}}
+def sleep_data_exists(クライアント、database_id、sleep_date):
+ クエリ = クライアント。データベース.クエリ(
+ database_id=database_id、
+ フィルター={「プロパティ」: 「ロングデート」, 「日付」: {「等しい」: sleep_date}}
     )
-    results = query.get('results', [])
-    return results[0] if results else None  # Ensure it returns None instead of causing IndexError
+ 結果 = クエリ。得る(「結果」, [])
+    戻る 結果[0] もし 結果 それ以外 なし  # IndexError を引き起こす代わりに None を返すようにします
 
-def create_sleep_data(client, database_id, sleep_data, skip_zero_sleep=True):
-    daily_sleep = sleep_data.get('dailySleepDTO', {})
-    if not daily_sleep:
-        return
+def create_sleep_data(クライアント、database_id、sleep_data、skip_zero_sleep=真実):
+ daily_sleep = sleep_data。得る(‘dailysleepdto’, {})
+    もし ない daily_sleep:
+        戻る
     
-    sleep_date = daily_sleep.get('calendarDate', "Unknown Date")
-    total_sleep = sum(
-        (daily_sleep.get(k, 0) or 0) for k in ['deepSleepSeconds', 'lightSleepSeconds', 'remSleepSeconds']
+ sleep_date = daily_sleep。得る(「カレンダー日付」, 「日付不明」)
+ total_sleep = 合計(
+        (daily_sleep。得る(k、 0) または 0) のために k で [「ディープスリープ秒」, ‘lightSleepSeconds’, ‘remSleepSeconds’]
     )
     
     
-    if skip_zero_sleep and total_sleep == 0:
-        print(f"Skipping sleep data for {sleep_date} as total sleep is 0")
-        return
+    もし スキップ_ゼロ_スリープ そして total_sleep == 0:
+        印刷(f"睡眠データをスキップします {スリープ_日付} 総睡眠時間は0インチなので)
+        戻る
 
-    properties = {
-        "Date": {"title": [{"text": {"content": format_date_for_name(sleep_date)}}]},
-        "Times": {"rich_text": [{"text": {"content": f"{format_time_readable(daily_sleep.get('sleepStartTimestampGMT'))} → {format_time_readable(daily_sleep.get('sleepEndTimestampGMT'))}"}}]},
-        "Long Date": {"date": {"start": sleep_date}},
-        "Full Date/Time": {"date": {"start": format_time(daily_sleep.get('sleepStartTimestampGMT')), "end": format_time(daily_sleep.get('sleepEndTimestampGMT'))}},
-        "Total Sleep (h)": {"number": round(total_sleep / 3600, 1)},
-        "Light Sleep (h)": {"number": round(daily_sleep.get('lightSleepSeconds', 0) / 3600, 1)},
-        "Deep Sleep (h)": {"number": round(daily_sleep.get('deepSleepSeconds', 0) / 3600, 1)},
-        "REM Sleep (h)": {"number": round(daily_sleep.get('remSleepSeconds', 0) / 3600, 1)},
-        "Awake Time (h)": {"number": round(daily_sleep.get('awakeSleepSeconds', 0) / 3600, 1)},
-        "Total Sleep": {"rich_text": [{"text": {"content": format_duration(total_sleep)}}]},
-        "Light Sleep": {"rich_text": [{"text": {"content": format_duration(daily_sleep.get('lightSleepSeconds', 0))}}]},
-        "Deep Sleep": {"rich_text": [{"text": {"content": format_duration(daily_sleep.get('deepSleepSeconds', 0))}}]},
-        "REM Sleep": {"rich_text": [{"text": {"content": format_duration(daily_sleep.get('remSleepSeconds', 0))}}]},
-        "Awake Time": {"rich_text": [{"text": {"content": format_duration(daily_sleep.get('awakeSleepSeconds', 0))}}]},
-        "Resting HR": {"number": sleep_data.get('restingHeartRate', 0)}
+ プロパティ = {
+        「日付」: {「タイトル」: [{「テキスト」: {「コンテンツ」: format_date_for_name(スリープ_日付)}}]},
+        「タイムズ」: {「リッチ_テキスト」: [{「テキスト」: {「コンテンツ」: f"{フォーマット_時間_読み取り可能(daily_sleep。得る(「スリープスタートタイムスタンプGMT」))} → {フォーマット_時間_読み取り可能(daily_sleep。get('sleepEndTimestampGMT'))}"}}]},
+        「ロングデート」: {「日付」: {「スタート」: sleep_date}},
+        「完全な日付/時刻」: {「日付」: {「スタート」: フォーマット_時間(daily_sleep。得る(「スリープスタートタイムスタンプGMT」)), 「終わり」: フォーマット_時間(daily_sleep。得る(‘sleepEndTimestampGMT’))}},
+        「トータルスリープ（h）」: {「番号」: ラウンド(total_sleep / 3600, 1)},
+        「軽い睡眠（h）」: {「番号」: ラウンド(daily_sleep。得る(‘lightSleepSeconds’, 0) / 3600, 1)},
+        「深い眠り（h）」: {「番号」: ラウンド(daily_sleep。得る(「ディープスリープ秒」, 0) / 3600, 1)},
+        「レム睡眠（h）」: {「番号」: ラウンド(daily_sleep。得る(‘remSleepSeconds’, 0) / 3600, 1)},
+        「起床時間（h）」: {「番号」: ラウンド(daily_sleep。得る(「覚醒時の睡眠秒数」, 0) / 3600, 1)},
+        「トータルスリープ」: {「リッチ_テキスト」: [{「テキスト」: {「コンテンツ」: フォーマット_期間(total_sleep)}}]},
+        「軽い睡眠」: {「リッチ_テキスト」: [{「テキスト」: {「コンテンツ」: フォーマット_期間(daily_sleep。得る(‘lightSleepSeconds’, 0))}}]},
+        「深い眠り」: {「リッチ_テキスト」: [{「テキスト」: {「コンテンツ」: フォーマット_期間(daily_sleep。得る(「ディープスリープ秒」, 0))}}]},
+        「レム睡眠」: {「リッチ_テキスト」: [{「テキスト」: {「コンテンツ」: フォーマット_期間(daily_sleep。得る(‘remSleepSeconds’, 0))}}]},
+        「目覚めの時間」: {「リッチ_テキスト」: [{「テキスト」: {「コンテンツ」: フォーマット_期間(daily_sleep。得る(「覚醒時の睡眠秒数」, 0))}}]},
+        「安静時の心拍数」: {「番号」: sleep_data。得る(「ハートレートを休ませる」, 0)}
     }
     
-    client.pages.create(parent={"database_id": database_id}, properties=properties, icon={"emoji": "😴"})
-    print(f"Created sleep entry for: {sleep_date}")
+ クライアント。ページ.作成する(親={「データベース_id」: database_id}, 、 プロパティ=プロパティ、アイコン={「絵文字」: 「😴」})
+    印刷(f"次のスリープエントリを作成しました: {スリープ_日付}")
 
-def main():
-    load_dotenv()
+def メイン():
+    ロード_ドーテン()
 
-    # Initialize Garmin and Notion clients using environment variables
-    garmin_email = os.getenv("GARMIN_EMAIL")
-    garmin_password = os.getenv("GARMIN_PASSWORD")
-    notion_token = os.getenv("NOTION_TOKEN")
-    database_id = os.getenv("NOTION_SLEEP_DB_ID")
+    # 環境変数を使用して Garmin クライアントと Notion クライアントを初期化します
+ garmin_email = os。ゲテンヴ(「GARMIN_EMAIL」)
+ garmin_password = os。ゲテンヴ(「GARMIN_PASSWORD」です)
+ notion_token = os。ゲテンヴ(「NOTION_TOKEN」)
+ database_id = os。ゲテンヴ(「NOTION_SLEEP_DB_ID」)
 
-    # --- Garmin login with token cache (to avoid 429 Too Many Requests) ---
-    token_dir = os.path.expanduser(os.getenv("GARMIN_TOKEN_DIR", "~/.garth"))
-    garmin = Garmin(garmin_email, garmin_password)
-    try:
-        # Reuse saved tokens if available (no SSO hit)
-        garmin.login(token_dir)
-        print(f"Logged in with cached tokens from {token_dir}")
-    except Exception as e:
+    # --- トークン キャッシュを使用した Garmin ログイン (429 件のリクエストが多すぎないようにするため）---
+ token_dir = os。パス.エクスパンダ(オス。ゲテンヴ(「ガーミン_トークン_ディレクトリ」, 「~/.garth」))
+ ガーミン = ガーミン(garmin_email、garmin_パスワード)
+    試す:
+        # 保存したトークンが利用可能な場合は再利用します（SSO ヒットなし）
+ ガーミン。ログイン(トークン_ディレクトリ)
+        印刷(f"キャッシュされたトークンでログインしました {トークン_ディレクトリ}")
+    以外 例外 として e:
         # Fall back to a fresh SSO login, then persist tokens for next runs
         print(f"Cached login failed ({e.__class__.__name__}): {e}. Doing fresh login...")
         garmin.login()
