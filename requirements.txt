@@ -1,10 +1,13 @@
-garminconnect>=0.2.19,<0.3
+# Garmin Connect — widget+cffi strategy requires 0.3.2+ (Python 3.10+)
+garminconnect>=0.3.2
+
+# Notion
 notion-client==2.2.1
-pytz==2024.1
-datetime==5.5
+
+# Common
+pytz>=2024.1
+python-dotenv>=1.0.0
+
+# Other (preserved from original)
 withings-sync==4.2.4
 lxml>=4.6.0,<5.0
-
-
-
-python-dotenv
