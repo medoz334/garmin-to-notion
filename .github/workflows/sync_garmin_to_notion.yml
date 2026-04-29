@@ -2,8 +2,9 @@ name: Sync Garmin to Notion
 
 on:
   schedule:
-    - cron: '0 1 * * *' # Daily
+    - cron: '0 1 * * *' # Daily (UTC)
   workflow_dispatch:
+
 env:
   TZ: 'America/Montreal'
 
@@ -11,28 +12,26 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13'
 
       - name: Cache pip packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Cache Garmin tokens
         uses: actions/cache@v4
         with:
-          path: ~/.garth
-          key: garth-tokens-${{ github.run_id }}
+          path: ~/.cache/pip
+          key: $ runner.os -pip-$ hashFiles('**/requirements.txt') 
           restore-keys: |
-            garth-tokens-
+            $ runner.os -pip-
+
+      - name: Restore Garmin tokens from secrets
+        run: |
+          mkdir -p ~/.garminconnect
+          printf '%s' "$ secrets.GARMIN_TOKENS_JSON " > ~/.garminconnect/garmin_tokens.json
+          chmod 600 ~/.garminconnect/garmin_tokens.json
 
       - name: Install dependencies
         run: |
@@ -41,14 +40,12 @@ jobs:
 
       - name: Run script
         env:
-          GARMIN_EMAIL: ${{ secrets.GARMIN_EMAIL }}
-          GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          NOTION_DB_ID: ${{ secrets.NOTION_DB_ID }}
-          NOTION_PR_DB_ID: ${{ secrets.NOTION_PR_DB_ID }}
-          NOTION_STEPS_DB_ID: ${{ secrets.NOTION_STEPS_DB_ID }}
-          NOTION_SLEEP_DB_ID: ${{ secrets.NOTION_SLEEP_DB_ID }}
-          GARMIN_ACTIVITIES_FETCH_LIMIT: ${{ vars.GARMIN_ACTIVITIES_FETCH_LIMIT }}
+          NOTION_TOKEN: $ secrets.NOTION_TOKEN 
+          NOTION_DB_ID: $ secrets.NOTION_DB_ID 
+          NOTION_PR_DB_ID: $ secrets.NOTION_PR_DB_ID 
+          NOTION_STEPS_DB_ID: $ secrets.NOTION_STEPS_DB_ID 
+          NOTION_SLEEP_DB_ID: $ secrets.NOTION_SLEEP_DB_ID 
+          GARMIN_ACTIVITIES_FETCH_LIMIT: $ secrets.GARMIN_ACTIVITIES_FETCH_LIMIT 
           TZ: 'America/Montreal'
         run: |
           python garmin-activities.py
