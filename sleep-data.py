@@ -1,21 +1,32 @@
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from garminconnect import Garmin
 from notion_client import Client
-from dotenv import load_dotenv, dotenv_values
+from dotenv import load_dotenv
 import pytz
 import os
 
 # Constants
-local_tz = pytz.timezone("America/New_York")
-
-# Load environment variables
-load_dotenv()
-CONFIG = dotenv_values()
+local_tz = pytz.timezone("Asia/Tokyo")
 
 
-def get_sleep_data(garmin):
-    today = datetime.today().date()
-    return garmin.get_sleep_data(today.isoformat())
+def get_sleep_data_range(garmin, days_back: int):
+    """
+    Fetch sleep data for the last N days, ending with yesterday.
+    Today is excluded because Garmin may not have synced it yet when the workflow runs in the morning.
+    """
+    end_date = date.today() - timedelta(days=1)  # yesterday
+    start_date = end_date - timedelta(days=days_back - 1)
+    daterange = [start_date + timedelta(days=x) for x in range(days_back)]
+
+    sleep_records = []
+    for d in daterange:
+        try:
+            data = garmin.get_sleep_data(d.isoformat())
+            if data:
+                sleep_records.append(data)
+        except Exception as e:
+            print(f"Error fetching sleep for {d.isoformat()}: {e}")
+    return sleep_records
 
 
 def format_duration(seconds):
@@ -53,7 +64,7 @@ def sleep_data_exists(client, database_id, sleep_date):
 def create_sleep_data(client, database_id, sleep_data, skip_zero_sleep=True):
     daily_sleep = sleep_data.get('dailySleepDTO', {})
     if not daily_sleep:
-        return
+        return False
 
     sleep_date = daily_sleep.get('calendarDate', "Unknown Date")
     total_sleep = sum(
@@ -62,7 +73,7 @@ def create_sleep_data(client, database_id, sleep_data, skip_zero_sleep=True):
 
     if skip_zero_sleep and total_sleep == 0:
         print(f"Skipping sleep data for {sleep_date} as total sleep is 0")
-        return
+        return False
 
     properties = {
         "Date": {"title": [{"text": {"content": format_date_for_name(sleep_date)}}]},
@@ -84,6 +95,7 @@ def create_sleep_data(client, database_id, sleep_data, skip_zero_sleep=True):
 
     client.pages.create(parent={"database_id": database_id}, properties=properties, icon={"emoji": "😴"})
     print(f"Created sleep entry for: {sleep_date}")
+    return True
 
 
 def main():
@@ -91,21 +103,39 @@ def main():
 
     notion_token = os.getenv("NOTION_TOKEN")
     database_id = os.getenv("NOTION_SLEEP_DB_ID")
+    backfill_days = int(os.getenv("GARMIN_SLEEP_BACKFILL_DAYS") or "1")
 
-    # --- Garmin login using saved tokens (DI OAuth, garminconnect>=0.3.2) ---
-    token_dir = os.path.expanduser(os.getenv("GARMIN_TOKEN_DIR", "~/.garminconnect"))
+    # --- Garmin login using token string from env var ---
     garmin = Garmin()
-    garmin.login(token_dir)
-    print(f"Logged in with saved tokens from {token_dir}")
-    # ------------------------------------------------------------------------
+    garmin.login(os.getenv("GARMIN_TOKENS_JSON"))
+    print("Logged in with saved tokens (from env var)")
+    # ------------------------------------------------------
 
     client = Client(auth=notion_token)
 
-    data = get_sleep_data(garmin)
-    if data:
+    print(f"Fetching last {backfill_days} day(s) of sleep data (ending yesterday)...")
+    sleep_records = get_sleep_data_range(garmin, backfill_days)
+    print(f"Retrieved {len(sleep_records)} sleep record(s) from Garmin")
+
+    created_count = 0
+    skipped_existing = 0
+    skipped_zero = 0
+    for data in sleep_records:
         sleep_date = data.get('dailySleepDTO', {}).get('calendarDate')
-        if sleep_date and not sleep_data_exists(client, database_id, sleep_date):
-            create_sleep_data(client, database_id, data, skip_zero_sleep=True)
+        if not sleep_date:
+            continue
+        if sleep_data_exists(client, database_id, sleep_date):
+            skipped_existing += 1
+            continue
+        if create_sleep_data(client, database_id, data, skip_zero_sleep=True):
+            created_count += 1
+        else:
+            skipped_zero += 1
+
+    print("\n=== Summary ===")
+    print(f"Created:                 {created_count}")
+    print(f"Skipped (already exist): {skipped_existing}")
+    print(f"Skipped (zero sleep):    {skipped_zero}")
 
 
 if __name__ == '__main__':
