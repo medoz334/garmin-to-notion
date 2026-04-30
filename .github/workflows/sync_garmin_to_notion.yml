@@ -21,14 +21,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          key: $｛｛ runner.os ｝｝-pip-$｛｛ hashFiles('requirements.txt') ｝｝
           restore-keys: |
-            ${{ runner.os }}-pip-
+            $｛｛ runner.os ｝｝-pip-
 
       - name: Restore Garmin tokens from secrets
         run: |
           mkdir -p ~/.garminconnect
-          printf '%s' "${{ secrets.GARMIN_TOKENS_JSON }}" > ~/.garminconnect/garmin_tokens.json
+          printf '%s' "$｛｛ secrets.GARMIN_TOKENS_JSON ｝｝" > ~/.garminconnect/garmin_tokens.json
           chmod 600 ~/.garminconnect/garmin_tokens.json
 
       - name: Install dependencies
@@ -38,12 +38,12 @@ jobs:
 
       - name: Run script
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          NOTION_DB_ID: ${{ secrets.NOTION_DB_ID }}
-          NOTION_PR_DB_ID: ${{ secrets.NOTION_PR_DB_ID }}
-          NOTION_STEPS_DB_ID: ${{ secrets.NOTION_STEPS_DB_ID }}
-          NOTION_SLEEP_DB_ID: ${{ secrets.NOTION_SLEEP_DB_ID }}
-          GARMIN_ACTIVITIES_FETCH_LIMIT: ${{ secrets.GARMIN_ACTIVITIES_FETCH_LIMIT }}
+          NOTION_TOKEN: $｛｛ secrets.NOTION_TOKEN ｝｝
+          NOTION_DB_ID: $｛｛ secrets.NOTION_DB_ID ｝｝
+          NOTION_PR_DB_ID: $｛｛ secrets.NOTION_PR_DB_ID ｝｝
+          NOTION_STEPS_DB_ID: $｛｛ secrets.NOTION_STEPS_DB_ID ｝｝
+          NOTION_SLEEP_DB_ID: $｛｛ secrets.NOTION_SLEEP_DB_ID ｝｝
+          GARMIN_ACTIVITIES_FETCH_LIMIT: $｛｛ secrets.GARMIN_ACTIVITIES_FETCH_LIMIT ｝｝
         run: |
           python garmin-activities.py
           python personal-records.py
