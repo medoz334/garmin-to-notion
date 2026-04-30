@@ -105,10 +105,11 @@ def main():
     database_id = os.getenv("NOTION_SLEEP_DB_ID")
     backfill_days = int(os.getenv("GARMIN_SLEEP_BACKFILL_DAYS") or "1")
 
-    # --- Garmin login using token string from env var ---
+    # --- Garmin login using token directory (written by 'Restore Garmin tokens from secrets' step) ---
+    token_dir = os.path.expanduser(os.getenv("GARMIN_TOKEN_DIR", "~/.garminconnect"))
     garmin = Garmin()
-    garmin.login(os.getenv("GARMIN_TOKENS_JSON"))
-    print("Logged in with saved tokens (from env var)")
+    garmin.login(token_dir)
+    print(f"Logged in with saved tokens from {token_dir}")
     # ------------------------------------------------------
 
     client = Client(auth=notion_token)
