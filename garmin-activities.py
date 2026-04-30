@@ -1,51 +1,31 @@
-def main():
-    load_dotenv()
+import os
+from datetime import datetime, UTC, timedelta
 
-    # Initialize Notion client and fetch settings
-    notion_token = os.getenv("NOTION_TOKEN")
-    database_id = os.getenv("NOTION_DB_ID")
-    garmin_fetch_limit = int(os.getenv("GARMIN_ACTIVITIES_FETCH_LIMIT") or "1000")
+import pytz
+from dotenv import load_dotenv
+from garminconnect import Garmin as GarminClient
+from notion_client import Client as NotionClient
 
-    # --- Garmin login using saved tokens (DI OAuth format, garminconnect>=0.3.2) ---
-    # CI: ~/.garminconnect/garmin_tokens.json is restored from the GARMIN_TOKENS_JSON
-    #     GitHub Secret before this script runs (see workflow yml).
-    # Local: run generate_token.py once with widget+cffi to populate the same path.
-    # Tokens auto-refresh via DI OAuth, so the Secret typically needs updating only
-    # ~yearly. If login fails here, regenerate tokens locally and update the Secret
-    # — do NOT attempt a fresh SSO login from CI (will be rate-limited as 429).
-    token_dir = os.path.expanduser(os.getenv("GARMIN_TOKEN_DIR", "~/.garminconnect"))
-    garmin_client = GarminClient()
-    garmin_client.login(token_dir)
-    print(f"Logged in with saved tokens from {token_dir}")
-    # -------------------------------------------------------------------------------
+# Your local time zone, replace with the appropriate one if needed
+local_tz = pytz.timezone('America/Toronto')
 
-    notion_client = NotionClient(auth=notion_token)
-
-    # Get all activities
-    activities = get_all_activities(garmin_client, garmin_fetch_limit)
-
-    # Process all activities
-    for activity in activities:
-        activity_date_raw: str = activity.get('startTimeGMT')
-        activity_date: datetime = (
-            datetime
-            .strptime(activity_date_raw, '%Y-%m-%d %H:%M:%S')
-            .replace(tzinfo=UTC)
-        )
-
-        activity_name = format_entertainment(activity.get('activityName', 'Unnamed Activity'))
-        activity_type, activity_subtype = format_activity_type(
-            activity.get('activityType', {}).get('typeKey', 'Unknown'),
-            activity_name
-        )
-
-        existing_activity = activity_exists(notion_client, database_id, activity_date, activity_type, activity_name)
-
-        if existing_activity:
-            if activity_needs_update(existing_activity, activity):
-                update_activity(notion_client, existing_activity, activity)
-        else:
-            create_activity(notion_client, database_id, activity)
-
-if __name__ == '__main__':
-    main()
+ACTIVITY_ICONS = {
+    "Barre": "https://img.icons8.com/?size=100&id=66924&format=png&color=000000",
+    "Breathwork": "https://img.icons8.com/?size=100&id=9798&format=png&color=000000",
+    "Cardio": "https://img.icons8.com/?size=100&id=71221&format=png&color=000000",
+    "Cycling": "https://img.icons8.com/?size=100&id=47443&format=png&color=000000",
+    "Hiking": "https://img.icons8.com/?size=100&id=9844&format=png&color=000000",
+    "Indoor Cardio": "https://img.icons8.com/?size=100&id=62779&format=png&color=000000",
+    "Indoor Cycling": "https://img.icons8.com/?size=100&id=47443&format=png&color=000000",
+    "Indoor Rowing": "https://img.icons8.com/?size=100&id=71098&format=png&color=000000",
+    "Pilates": "https://img.icons8.com/?size=100&id=9774&format=png&color=000000",
+    "Meditation": "https://img.icons8.com/?size=100&id=9798&format=png&color=000000",
+    "Rowing": "https://img.icons8.com/?size=100&id=71491&format=png&color=000000",
+    "Running": "https://img.icons8.com/?size=100&id=k1l1XFkME39t&format=png&color=000000",
+    "Strength Training": "https://img.icons8.com/?size=100&id=107640&format=png&color=000000",
+    "Stretching": "https://img.icons8.com/?size=100&id=djfOcRn1m_kh&format=png&color=000000",
+    "Swimming": "https://img.icons8.com/?size=100&id=9777&format=png&color=000000",
+    "Treadmill Running": "https://img.icons8.com/?size=100&id=9794&format=png&color=000000",
+    "Walking": "https://img.icons8.com/?size=100&id=9807&format=png&color=000000",
+    "Yoga": "https://img.icons8.com/?size=100&id=9783&format=png&color=000000",
+}
