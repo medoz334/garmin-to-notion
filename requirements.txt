@@ -1,5 +1,6 @@
-# Garmin Connect — widget+cffi strategy requires 0.3.2+ (Python 3.10+)
-garminconnect>=0.3.2
+# Garmin Connect
+garminconnect==0.3.3
+curl_cffi
 
 # Notion
 notion-client==2.2.1
