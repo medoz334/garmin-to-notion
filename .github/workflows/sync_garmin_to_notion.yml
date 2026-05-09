@@ -5,9 +5,17 @@ on:
     - cron: '0 1 * * *'  # 毎日 10:00 JST（UTC 01:00）
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: garmin-sync
+  cancel-in-progress: false
+
 jobs:
   sync:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,20 +36,21 @@ jobs:
       - name: Restore Garmin tokens from secrets
         env:
           GARMIN_TOKENS_JSON: ${{ secrets.GARMIN_TOKENS_JSON }}
+        shell: bash
         run: |
+          set -euo pipefail
+
+          if [ -z "${GARMIN_TOKENS_JSON:-}" ]; then
+            echo "::error::GARMIN_TOKENS_JSON secret is empty or missing."
+            exit 1
+          fi
+
           mkdir -p ~/.garminconnect
           printf '%s' "$GARMIN_TOKENS_JSON" > ~/.garminconnect/garmin_tokens.json
           chmod 600 ~/.garminconnect/garmin_tokens.json
-          echo "==DEBUG=="
-          ls -la ~/.garminconnect/garmin_tokens.json
-          echo "Size: $(wc -c < ~/.garminconnect/garmin_tokens.json) bytes (expected ~2016)"
-          echo "First 30 chars:"
-          head -c 30 ~/.garminconnect/garmin_tokens.json
-          echo ""
-          echo "Last 30 chars:"
-          tail -c 30 ~/.garminconnect/garmin_tokens.json
-          echo ""
-          echo "==END=="
+
+          echo "Garmin token file restored."
+          echo "Token file size: $(wc -c < ~/.garminconnect/garmin_tokens.json) bytes"
 
       - name: Install dependencies
         run: |
@@ -50,6 +59,7 @@ jobs:
 
       - name: Run script
         env:
+          GARMIN_TOKEN_DIR: ~/.garminconnect
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_DB_ID: ${{ secrets.NOTION_DB_ID }}
           NOTION_PR_DB_ID: ${{ secrets.NOTION_PR_DB_ID }}
