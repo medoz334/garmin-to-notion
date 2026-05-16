@@ -2,7 +2,7 @@ name: Sync Garmin to Notion
 
 on:
   schedule:
-    - cron: '0 1 * * *'  # 毎日 10:00 JST（UTC 01:00）
+    - cron: '0 1 */2 * *'  # 2日に1回 10:00 JST
   workflow_dispatch:
 
 permissions:
